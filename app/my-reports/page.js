@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { SignInButton, useUser } from "@clerk/nextjs";
 import ToastProvider, { useToast } from "../components/ToastProvider";
 import ReportCard from "../components/ReportCard";
 
@@ -15,16 +14,14 @@ const suggestionByProduct = (name = "") => {
 const withSuggestions = (items = []) => items.map((item) => ({ ...item, repair_suggestions: suggestionByProduct(item.product_name) }));
 
 const MyReportsContent = () => {
-  const { user, isSignedIn } = useUser();
   const { addToast } = useToast();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadReports = async () => {
-    if (!isSignedIn) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/warranties?mine=true", { cache: "no-store" });
+      const res = await fetch("/api/warranties", { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) {
         addToast(data.error || "Failed to load warranties.", "error");
@@ -40,52 +37,23 @@ const MyReportsContent = () => {
 
   useEffect(() => {
     loadReports();
-  }, [isSignedIn]);
-
-  const handleDelete = async (report) => {
-    try {
-      const res = await fetch(`/api/warranties/${report.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) {
-        addToast(data.error || "Failed to delete warranty.", "error");
-        return;
-      }
-      addToast("Warranty deleted.", "success");
-      await loadReports();
-    } catch {
-      addToast("Failed to delete warranty.", "error");
-    }
-  };
-
-  if (!isSignedIn) {
-    return (
-      <div className="page">
-        <div className="rounded-3xl border border-white/60 bg-white/80 p-8 text-center shadow-lg backdrop-blur">
-          <h1 className="text-2xl font-semibold text-slate-900">My Warranties</h1>
-          <p className="mt-2 text-sm text-slate-600">Sign in to view your saved warranty records.</p>
-          <div className="mt-4 inline-flex">
-            <SignInButton />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div className="page">
       <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg backdrop-blur">
-        <h1 className="text-2xl font-semibold text-slate-900">My Warranties</h1>
-        <p className="text-sm text-slate-500">Manage the products you have protected with Reparix.</p>
+        <h1 className="text-2xl font-semibold text-slate-900">Warranty Records</h1>
+        <p className="text-sm text-slate-500">All stored warranties. Configure Clerk env vars to enable private per-user actions.</p>
       </div>
 
       {loading ? (
-        <p className="mt-6 text-sm text-slate-500">Loading your warranties...</p>
+        <p className="mt-6 text-sm text-slate-500">Loading warranties...</p>
       ) : reports.length === 0 ? (
         <p className="mt-6 text-sm text-slate-500">No warranties yet.</p>
       ) : (
         <div className="mt-6 grid gap-4">
           {reports.map((report) => (
-            <ReportCard key={report.id} report={report} isOwner={Boolean(user?.id && report.user_id === user.id)} onResolve={handleDelete} />
+            <ReportCard key={report.id} report={report} isOwner={false} onResolve={() => {}} />
           ))}
         </div>
       )}

@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { SignInButton, useUser } from "@clerk/nextjs";
 import ToastProvider, { useToast } from "./components/ToastProvider";
 import ReportCard from "./components/ReportCard";
 import StatCard from "./components/StatCard";
@@ -17,38 +16,18 @@ const initialForm = {
 const suggestionsByProduct = (name = "") => {
   const value = name.toLowerCase();
   if (/(phone|mobile|iphone|android)/.test(value)) {
-    return [
-      "Authorized mobile service center",
-      "Verified local smartphone technician",
-      "Doorstep mobile repair partner",
-    ];
+    return ["Authorized mobile service center", "Verified local smartphone technician", "Doorstep mobile repair partner"];
   }
   if (/(laptop|notebook|macbook)/.test(value)) {
-    return [
-      "Authorized laptop service center",
-      "Motherboard specialist repair shop",
-      "On-site laptop support",
-    ];
+    return ["Authorized laptop service center", "Motherboard specialist repair shop", "On-site laptop support"];
   }
   if (/(tv|monitor|television)/.test(value)) {
-    return [
-      "Brand TV service center",
-      "Display panel specialist",
-      "Home visit electronics technician",
-    ];
+    return ["Brand TV service center", "Display panel specialist", "Home visit electronics technician"];
   }
   if (/(fridge|refrigerator|ac|air conditioner|washing machine)/.test(value)) {
-    return [
-      "Authorized appliance service center",
-      "Verified neighborhood appliance repair",
-      "Doorstep appliance engineer",
-    ];
+    return ["Authorized appliance service center", "Verified neighborhood appliance repair", "Doorstep appliance engineer"];
   }
-  return [
-    "Brand-authorized service center",
-    "Verified local technician",
-    "Trusted doorstep repair service",
-  ];
+  return ["Brand-authorized service center", "Verified local technician", "Trusted doorstep repair service"];
 };
 
 const attachSuggestions = (items = []) => items.map((item) => ({ ...item, repair_suggestions: suggestionsByProduct(item.product_name) }));
@@ -62,7 +41,6 @@ const daysLeft = (expiryDate) => {
 };
 
 const DashboardContent = () => {
-  const { user, isSignedIn } = useUser();
   const { addToast } = useToast();
   const [warranties, setWarranties] = useState([]);
   const [form, setForm] = useState(initialForm);
@@ -77,10 +55,13 @@ const DashboardContent = () => {
     return warranties.filter((item) => [item.product_name, item.brand, item.notes].join(" ").toLowerCase().includes(q));
   }, [warranties, query]);
 
-  const reminders = useMemo(() => warranties.filter((item) => {
-    const days = daysLeft(item.expiry_date);
-    return days >= 0 && days <= 30;
-  }), [warranties]);
+  const reminders = useMemo(
+    () => warranties.filter((item) => {
+      const days = daysLeft(item.expiry_date);
+      return days >= 0 && days <= 30;
+    }),
+    [warranties]
+  );
 
   const stats = useMemo(() => {
     const expired = warranties.filter((item) => daysLeft(item.expiry_date) < 0).length;
@@ -92,13 +73,11 @@ const DashboardContent = () => {
     };
   }, [warranties, reminders]);
 
-  const loadWarranties = async (mine = false) => {
+  const loadWarranties = async () => {
     setError("");
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (mine) params.set("mine", "true");
-      const res = await fetch(`/api/warranties?${params.toString()}`, { cache: "no-store" });
+      const res = await fetch("/api/warranties", { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to load warranties.");
@@ -160,11 +139,6 @@ const DashboardContent = () => {
     event.preventDefault();
     setError("");
 
-    if (!isSignedIn) {
-      addToast("Please sign in to add warranty records.", "error");
-      return;
-    }
-
     const validationMessage = validateForm();
     if (validationMessage) {
       setError(validationMessage);
@@ -195,21 +169,6 @@ const DashboardContent = () => {
     }
   };
 
-  const handleDelete = async (warranty) => {
-    try {
-      const res = await fetch(`/api/warranties/${warranty.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) {
-        addToast(data.error || "Failed to delete warranty.", "error");
-        return;
-      }
-      addToast("Warranty deleted.", "success");
-      await loadWarranties();
-    } catch {
-      addToast("Failed to delete warranty.", "error");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       <div className="page">
@@ -218,9 +177,7 @@ const DashboardContent = () => {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600">Warranty Manager</p>
               <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">Reparix</h1>
-              <p className="mt-3 max-w-xl text-sm text-slate-600 md:text-base">
-                Never lose your warranty again. Store documents, track expiry, and find repair options.
-              </p>
+              <p className="mt-3 max-w-xl text-sm text-slate-600 md:text-base">Never lose your warranty again. Store documents, track expiry, and find repair options.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <StatCard label="Total Products" value={stats.total} />
@@ -233,16 +190,8 @@ const DashboardContent = () => {
 
         <main className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_1.4fr]">
           <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg backdrop-blur">
-            {!isSignedIn ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 p-6 text-center">
-                <p className="text-sm text-slate-600">Sign in to add and manage your warranties.</p>
-                <div className="mt-4 inline-flex">
-                  <SignInButton />
-                </div>
-              </div>
-            ) : null}
-
             <h2 className="text-xl font-semibold text-slate-900">Add Warranty</h2>
+            <p className="mt-1 text-sm text-slate-500">Set Clerk env keys to enable account-based saving/deleting in production.</p>
             <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label className="text-sm font-semibold text-slate-700">Product name</label>
@@ -272,7 +221,7 @@ const DashboardContent = () => {
                 <textarea value={form.notes} onChange={handleChange("notes")} placeholder="Any extra details" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
               </div>
               {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-              <button type="submit" disabled={!isSignedIn || submitting} className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">
+              <button type="submit" disabled={submitting} className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">
                 {submitting ? "Saving..." : "Save Warranty"}
               </button>
             </form>
@@ -307,7 +256,7 @@ const DashboardContent = () => {
             ) : (
               <div className="mt-6 grid gap-4">
                 {filtered.map((item) => (
-                  <ReportCard key={item.id} report={item} isOwner={Boolean(user?.id && item.user_id === user.id)} onResolve={handleDelete} />
+                  <ReportCard key={item.id} report={item} isOwner={false} onResolve={() => {}} />
                 ))}
               </div>
             )}
