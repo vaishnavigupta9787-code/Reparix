@@ -1,74 +1,75 @@
-﻿const formatDateLabel = (reportDate, kind) => {
-  if (!reportDate) return "";
+﻿const isPdf = (url = "") => url.toLowerCase().includes(".pdf");
+
+const daysLeft = (expiryDate) => {
+  if (!expiryDate) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const date = new Date(reportDate);
-  date.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+  const exp = new Date(expiryDate);
+  exp.setHours(0, 0, 0, 0);
+  return Math.floor((exp - today) / (1000 * 60 * 60 * 24));
+};
 
-  if (diffDays === 0) return `${kind === "found" ? "Found" : "Lost"} today`;
-  if (diffDays === 1) return `${kind === "found" ? "Found" : "Lost"} yesterday`;
-  if (diffDays > 1) return `${kind === "found" ? "Found" : "Lost"} ${diffDays} days ago`;
-  return "";
+const statusLabel = (expiryDate) => {
+  const days = daysLeft(expiryDate);
+  if (days === null) return { text: "Unknown", style: "bg-slate-100 text-slate-700" };
+  if (days < 0) return { text: `Expired ${Math.abs(days)}d ago`, style: "bg-rose-100 text-rose-700" };
+  if (days === 0) return { text: "Expires today", style: "bg-amber-100 text-amber-700" };
+  if (days <= 30) return { text: `${days}d left`, style: "bg-amber-100 text-amber-700" };
+  return { text: `${days}d left`, style: "bg-emerald-100 text-emerald-700" };
 };
 
 export default function ReportCard({ report, isOwner, onResolve }) {
-  const emailText = report.hide_email ? "Hidden" : report.email;
-  const contactLink = `mailto:${report.email}?subject=${encodeURIComponent(
-    `Regarding ${report.name}`
-  )}&body=${encodeURIComponent("Hi, I am reaching out about the reported item.")}`;
+  const status = statusLabel(report.expiry_date);
 
   return (
     <article className="rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:shadow-lg">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-lg font-semibold text-slate-900">{report.name}</p>
+          <p className="text-lg font-semibold text-slate-900">{report.product_name}</p>
           <p className="text-sm text-slate-500">
-            {formatDateLabel(report.report_date, report.kind)} • {report.location}
+            {report.brand || "No brand"} • Purchased {report.purchase_date}
           </p>
         </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-            report.kind === "lost"
-              ? "bg-rose-100 text-rose-700"
-              : "bg-emerald-100 text-emerald-700"
-          }`}
-        >
-          {report.kind}
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${status.style}`}>
+          {status.text}
         </span>
       </header>
 
-      {report.image_url ? (
-        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-          <img src={report.image_url} alt={report.name} className="h-44 w-full object-cover" />
+      <div className="mt-3 space-y-1 text-sm text-slate-600">
+        <p><strong>Warranty:</strong> {report.warranty_months} months</p>
+        <p><strong>Expiry:</strong> {report.expiry_date}</p>
+        {report.notes ? <p><strong>Notes:</strong> {report.notes}</p> : null}
+      </div>
+
+      {report.invoice_url ? (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3 text-sm">
+          <p className="font-semibold text-slate-700">Invoice</p>
+          <a className="text-blue-700 underline" href={report.invoice_url} target="_blank" rel="noreferrer">
+            {isPdf(report.invoice_url) ? "Open PDF bill" : "Open uploaded bill"}
+          </a>
         </div>
       ) : null}
 
-      <p className="mt-4 text-sm text-slate-600">{report.description}</p>
-      <p className="mt-3 text-sm text-slate-700">
-        <strong>Contact:</strong> {emailText}
-      </p>
+      <div className="mt-4">
+        <p className="text-sm font-semibold text-slate-700">Repair Suggestions</p>
+        <ul className="mt-1 list-disc pl-5 text-sm text-slate-600">
+          {(report.repair_suggestions || []).map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </div>
 
-      <div className="mt-4 flex flex-wrap gap-3">
-        <a
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
-          href={contactLink}
-        >
-          Email Reporter
-        </a>
-        {isOwner ? (
+      {isOwner ? (
+        <div className="mt-4 flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => onResolve(report)}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
           >
-            {report.resolved ? "Reopen" : "Mark Resolved"}
+            Delete
           </button>
-        ) : null}
-        {report.resolved ? (
-          <span className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-500">Resolved</span>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </article>
   );
 }

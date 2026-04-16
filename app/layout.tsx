@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'College Lost & Found Tracker',
-  description: 'Report lost or found items fast, search by location and date, and contact the reporter.',
+  title: 'Reparix',
+  description: 'Never lose your warranty again. Store invoices, track expiry dates, and manage repairs.',
 }
 
 export default function RootLayout({
@@ -19,11 +19,11 @@ export default function RootLayout({
         <ClerkProvider>
           <header className="mx-auto flex max-w-6xl items-center justify-between px-6 pt-6">
             <Link href="/" className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
-              Campus Utility
+              Reparix
             </Link>
             <div className="flex items-center gap-4">
               <Link href="/my-reports" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
-                My Reports
+                My Warranties
               </Link>
               <Show when="signed-out">
                 <SignInButton />

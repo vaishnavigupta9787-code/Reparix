@@ -1,9 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
+﻿import { createClient } from "@supabase/supabase-js";
 import { auth } from "@clerk/nextjs/server";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || "item-images";
+const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || "warranty-docs";
 
 const getClient = () => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -38,13 +38,25 @@ export async function POST(request) {
     return jsonResponse({ error: "No file uploaded." }, 400);
   }
 
-  const maxSize = 5 * 1024 * 1024;
-  if (file.size > maxSize) {
-    return jsonResponse({ error: "Image must be under 5MB." }, 400);
+  const allowedTypes = [
+    "application/pdf",
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/jpg",
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    return jsonResponse({ error: "Only PDF or image files are allowed." }, 400);
   }
 
-  const fileExt = file.name.split(".").pop();
-  const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
+  const maxSize = 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return jsonResponse({ error: "File must be under 10MB." }, 400);
+  }
+
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  const filePath = `${userId}/${crypto.randomUUID()}.${ext}`;
 
   const { error } = await supabase.storage
     .from(SUPABASE_BUCKET)
@@ -55,6 +67,5 @@ export async function POST(request) {
   }
 
   const { data } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filePath);
-
-  return jsonResponse({ url: data.publicUrl });
+  return jsonResponse({ url: data.publicUrl, mimeType: file.type });
 }
