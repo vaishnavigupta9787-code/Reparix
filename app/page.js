@@ -1,87 +1,136 @@
-﻿export default function HomePage() {
-  const navIcons = ["▣", "◔", "⌂", "◎", "☻", "✓", "◫", "◌", "◍"];
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+﻿const sampleRows = [
+  { product: "iPhone 13", purchase: "05.06.2022", status: "Active", expires: "8 Months" },
+  { product: "Samsung TV", purchase: "05.16.2023", status: "Expiring Soon", expires: "5 Days" },
+  { product: "Dell Laptop", purchase: "05.16.2021", status: "Expired", expires: "Expired" },
+  { product: "Canon Camera", purchase: "05.16.2020", status: "Active", expires: "1 Year" },
+];
 
+export default function HomePage() {
   return (
-    <main className="planner-bg">
-      <section className="planner-shell">
-        <aside className="planner-rail">
-          <button className="rail-home" type="button">◫</button>
-          <ul>
-            {navIcons.map((icon, idx) => (
-              <li key={`${icon}-${idx}`}>
-                <button className={`rail-icon ${idx === 4 ? "active" : ""}`} type="button">{icon}</button>
-              </li>
-            ))}
-          </ul>
+    <main className="vault-wrap">
+      <div className="vault-orb orb-a" />
+      <div className="vault-orb orb-b" />
+
+      <section className="vault-shell hero-shell">
+        <nav className="vault-nav">
+          <div className="vault-brand">➤ FixVault</div>
+          <div className="vault-links">
+            <a href="#">Dashboard</a>
+            <a href="#">Add Product</a>
+            <a href="#">My Warranties</a>
+          </div>
+          <button className="btn ghost">Sign In</button>
+        </nav>
+
+        <header className="hero-copy">
+          <h1>Never Lose Your Warranty Again</h1>
+          <p>Store, track and manage all your warranties in one place</p>
+          <div className="hero-actions">
+            <button className="btn primary">Get Started</button>
+            <button className="btn ghost">Watch Demo</button>
+          </div>
+        </header>
+
+        <div className="feature-grid">
+          <article className="feature-card">
+            <strong>Upload Bills</strong>
+            <span>Easily upload and store receipts securely.</span>
+          </article>
+          <article className="feature-card">
+            <strong>Expiry Reminders</strong>
+            <span>Get notified before warranty expiration.</span>
+          </article>
+          <article className="feature-card">
+            <strong>Repair Services</strong>
+            <span>Find trusted nearby repair providers.</span>
+          </article>
+        </div>
+      </section>
+
+      <section className="vault-shell dashboard-shell">
+        <aside className="left-rail">
+          <h3>➤ FixVault</h3>
+          <button className="rail-link active">Dashboard</button>
+          <button className="rail-link">Add Product</button>
+          <button className="rail-link">My Warranties</button>
+          <button className="rail-link">Settings</button>
         </aside>
 
-        <div className="planner-main">
-          <header className="planner-topbar">
-            <p>Floor <strong>Main</strong> ⚲ ⚙</p>
-          </header>
+        <div className="dashboard-main">
+          <div className="dashboard-head">
+            <h2>Dashboard</h2>
+            <div className="dash-icons">⌕  ⚪  ☰</div>
+          </div>
 
-          <section className="planner-grid">
-            <div className="panel planner-left">
-              <h2>Planner</h2>
-              <div className="planner-list">
-                <button type="button" className="planner-row selected"><span>⏻ Unplanned</span><b>2</b></button>
-                <button type="button" className="planner-row"><span>◯ Planned</span></button>
-                <button type="button" className="planner-row"><span>◫ All</span></button>
-              </div>
+          <div className="stats-grid">
+            <article><b>152</b><span>Total Products</span></article>
+            <article><b>8</b><span>Expiring Soon</span></article>
+            <article><b>45</b><span>Active Warranties</span></article>
+          </div>
 
-              <article className="clock-card">
-                <div className="analog-face" aria-hidden="true">
-                  <span className="hand hand-hour" />
-                  <span className="hand hand-minute" />
-                  <span className="hand hand-second" />
-                  <span className="pivot" />
-                </div>
-                <div>
-                  <p className="time">4pm</p>
-                  <p className="date">Wed, 17th July</p>
-                </div>
-              </article>
-
-              <section className="calendar-card">
-                <div className="calendar-head">
-                  <h3>July 2024</h3>
-                  <p>‹ ›</p>
-                </div>
-                <div className="calendar-grid labels">
-                  {weekDays.map((day) => (
-                    <span key={day}>{day}</span>
-                  ))}
-                </div>
-                <div className="calendar-grid days">
-                  {days.map((day) => (
-                    <span key={day} className={day === 17 ? "day active" : day === 19 ? "day muted" : "day"}>{day}</span>
-                  ))}
-                </div>
-              </section>
+          <div className="table-card">
+            <div className="table-head">
+              <h3>My Warranties</h3>
+              <div className="table-tools"><input placeholder="Search" /><button>Sort ▾</button></div>
             </div>
 
-            <div className="panel planner-right">
-              <h2>Todo's</h2>
-              <div className="todo-header">☰ ToDo <strong>Unplanned</strong></div>
-              <div className="todo-input">＋ Add todo, press <kbd>↵</kbd> ENTER to save</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Purchase Date</th>
+                  <th>Warranty Status</th>
+                  <th>Expires In</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sampleRows.map((row) => (
+                  <tr key={row.product}>
+                    <td>{row.product}</td>
+                    <td>{row.purchase}</td>
+                    <td><span className={`status ${row.status.toLowerCase().replace(" ", "-")}`}>{row.status}</span></td>
+                    <td>{row.expires}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
-              <div className="todo-group">
-                <p className="group-title">⌃ Unplanned <b>2</b></p>
-                <div className="todo-item"><span>◉ HI-1</span><span>HI-1</span></div>
-              </div>
+      <section className="vault-shell add-shell">
+        <aside className="left-rail">
+          <h3>➤ FixVault</h3>
+          <button className="rail-link active">Dashboard</button>
+          <button className="rail-link">Add Product</button>
+          <button className="rail-link">My Warranties</button>
+          <button className="rail-link">Settings</button>
+        </aside>
 
-              <div className="todo-group">
-                <p className="group-title">Without Project</p>
-                <div className="todo-item"><span>◉ HI-1</span><span>HI-1</span></div>
-              </div>
-
-              <p className="group-title">⌄ Todo's <b>0</b></p>
-              <p className="group-title">⌄ Scheduled <b>0</b></p>
-              <p className="group-title">⌄ Done <b>0</b></p>
-            </div>
-          </section>
+        <div className="dashboard-main">
+          <h2>Add New Product</h2>
+          <form className="add-form">
+            <label>
+              Product Name
+              <input type="text" placeholder="Enter product" />
+            </label>
+            <label>
+              Brand
+              <select><option>Select brand</option></select>
+            </label>
+            <label>
+              Purchase Date
+              <input type="date" />
+            </label>
+            <label>
+              Warranty Period
+              <select><option>Select duration</option></select>
+            </label>
+            <label className="dropzone">
+              <span>Drag and drop or Browse</span>
+            </label>
+            <button type="button" className="btn primary save-btn">Save Product</button>
+          </form>
         </div>
       </section>
     </main>
