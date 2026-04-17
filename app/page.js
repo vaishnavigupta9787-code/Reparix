@@ -1,138 +1,276 @@
-﻿const sampleRows = [
-  { product: "iPhone 13", purchase: "05.06.2022", status: "Active", expires: "8 Months" },
-  { product: "Samsung TV", purchase: "05.16.2023", status: "Expiring Soon", expires: "5 Days" },
-  { product: "Dell Laptop", purchase: "05.16.2021", status: "Expired", expires: "Expired" },
-  { product: "Canon Camera", purchase: "05.16.2020", status: "Active", expires: "1 Year" },
-];
+﻿"use client";
 
-export default function HomePage() {
+import { useEffect, useMemo, useState } from "react";
+import ToastProvider, { useToast } from "./components/ToastProvider";
+import ReportCard from "./components/ReportCard";
+import StatCard from "./components/StatCard";
+
+const initialForm = {
+  product_name: "",
+  brand: "",
+  purchase_date: "",
+  warranty_months: "12",
+  notes: "",
+};
+
+const suggestionsByProduct = (name = "") => {
+  const value = name.toLowerCase();
+  if (/(phone|mobile|iphone|android)/.test(value)) {
+    return ["Authorized mobile service center", "Verified local smartphone technician", "Doorstep mobile repair partner"];
+  }
+  if (/(laptop|notebook|macbook)/.test(value)) {
+    return ["Authorized laptop service center", "Motherboard specialist repair shop", "On-site laptop support"];
+  }
+  if (/(tv|monitor|television)/.test(value)) {
+    return ["Brand TV service center", "Display panel specialist", "Home visit electronics technician"];
+  }
+  if (/(fridge|refrigerator|ac|air conditioner|washing machine)/.test(value)) {
+    return ["Authorized appliance service center", "Verified neighborhood appliance repair", "Doorstep appliance engineer"];
+  }
+  return ["Brand-authorized service center", "Verified local technician", "Trusted doorstep repair service"];
+};
+
+const attachSuggestions = (items = []) => items.map((item) => ({ ...item, repair_suggestions: suggestionsByProduct(item.product_name) }));
+
+const daysLeft = (expiryDate) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exp = new Date(expiryDate);
+  exp.setHours(0, 0, 0, 0);
+  return Math.floor((exp - today) / (1000 * 60 * 60 * 24));
+};
+
+const DashboardContent = () => {
+  const { addToast } = useToast();
+  const [warranties, setWarranties] = useState([]);
+  const [form, setForm] = useState(initialForm);
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [file, setFile] = useState(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return warranties.filter((item) => [item.product_name, item.brand, item.notes].join(" ").toLowerCase().includes(q));
+  }, [warranties, query]);
+
+  const reminders = useMemo(
+    () => warranties.filter((item) => {
+      const days = daysLeft(item.expiry_date);
+      return days >= 0 && days <= 30;
+    }),
+    [warranties]
+  );
+
+  const stats = useMemo(() => {
+    const expired = warranties.filter((item) => daysLeft(item.expiry_date) < 0).length;
+    return {
+      total: warranties.length,
+      active: warranties.length - expired,
+      expired,
+      dueSoon: reminders.length,
+    };
+  }, [warranties, reminders]);
+
+  const loadWarranties = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/warranties", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to load warranties.");
+        return;
+      }
+      setWarranties(attachSuggestions(data.warranties || []));
+    } catch {
+      setError("Failed to load warranties. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const today = new Date();
+    setForm((prev) => ({ ...prev, purchase_date: today.toISOString().slice(0, 10) }));
+    loadWarranties();
+  }, []);
+
+  const handleChange = (field) => (event) => {
+    setForm((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleFileChange = (event) => {
+    const selected = event.target.files?.[0];
+    if (!selected) {
+      setFile(null);
+      return;
+    }
+    if (selected.size > 10 * 1024 * 1024) {
+      addToast("Document must be under 10MB.", "error");
+      return;
+    }
+    setFile(selected);
+  };
+
+  const validateForm = () => {
+    if (!form.product_name || !form.purchase_date || !form.warranty_months) {
+      return "Please fill product name, purchase date, and warranty months.";
+    }
+    const months = Number(form.warranty_months);
+    if (!Number.isInteger(months) || months < 1 || months > 120) {
+      return "Warranty months must be between 1 and 120.";
+    }
+    return "";
+  };
+
+  const uploadBill = async () => {
+    if (!file) return "";
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/uploads", { method: "POST", body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "File upload failed.");
+    return data.url;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    const validationMessage = validateForm();
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const invoiceUrl = await uploadBill();
+      const res = await fetch("/api/warranties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, invoice_url: invoiceUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to save warranty.");
+        return;
+      }
+      setForm((prev) => ({ ...prev, product_name: "", brand: "", notes: "", warranty_months: "12" }));
+      setFile(null);
+      addToast("Warranty saved successfully.", "success");
+      await loadWarranties();
+    } catch (err) {
+      setError(err.message || "Failed to save warranty.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <main className="vault-wrap">
-      <div className="vault-orb orb-a" />
-      <div className="vault-orb orb-b" />
-
-      <section className="vault-shell hero-shell">
-        <nav className="vault-nav">
-          <div className="vault-brand">➤ FixVault</div>
-          <div className="vault-links">
-            <a href="#">Dashboard</a>
-            <a href="#">Add Product</a>
-            <a href="#">My Warranties</a>
-          </div>
-          <button className="btn ghost">Sign In</button>
-        </nav>
-
-        <header className="hero-copy">
-          <h1>Never Lose Your Warranty Again</h1>
-          <p>Store, track and manage all your warranties in one place</p>
-          <div className="hero-actions">
-            <button className="btn primary">Get Started</button>
-            <button className="btn ghost">Watch Demo</button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      <div className="page">
+        <header className="rounded-3xl border border-white/50 bg-white/70 p-8 shadow-lg backdrop-blur">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600">Warranty Manager</p>
+              <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">Reparix</h1>
+              <p className="mt-3 max-w-xl text-sm text-slate-600 md:text-base">Never lose your warranty again. Store documents, track expiry, and find repair options.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <StatCard label="Total Products" value={stats.total} />
+              <StatCard label="Active" value={stats.active} />
+              <StatCard label="Expired" value={stats.expired} />
+              <StatCard label="Due In 30 Days" value={stats.dueSoon} />
+            </div>
           </div>
         </header>
 
-        <div className="feature-grid">
-          <article className="feature-card">
-            <strong>Upload Bills</strong>
-            <span>Easily upload and store receipts securely.</span>
-          </article>
-          <article className="feature-card">
-            <strong>Expiry Reminders</strong>
-            <span>Get notified before warranty expiration.</span>
-          </article>
-          <article className="feature-card">
-            <strong>Repair Services</strong>
-            <span>Find trusted nearby repair providers.</span>
-          </article>
-        </div>
-      </section>
+        <main className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_1.4fr]">
+          <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg backdrop-blur">
+            <h2 className="text-xl font-semibold text-slate-900">Add Warranty</h2>
+            <p className="mt-1 text-sm text-slate-500">Set Clerk env keys to enable account-based saving/deleting in production.</p>
+            <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Product name</label>
+                <input type="text" value={form.product_name} onChange={handleChange("product_name")} placeholder="iPhone 14" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" required />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Brand</label>
+                <input type="text" value={form.brand} onChange={handleChange("brand")} placeholder="Apple" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">Purchase date</label>
+                  <input type="date" value={form.purchase_date} onChange={handleChange("purchase_date")} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" required />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">Warranty months</label>
+                  <input type="number" min="1" max="120" value={form.warranty_months} onChange={handleChange("warranty_months")} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" required />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Upload bill (PDF or image)</label>
+                <input type="file" accept="application/pdf,image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-600" />
+                {file ? <p className="mt-2 text-xs text-slate-500">Selected: {file.name}</p> : null}
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Notes</label>
+                <textarea value={form.notes} onChange={handleChange("notes")} placeholder="Any extra details" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+              </div>
+              {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+              <button type="submit" disabled={submitting} className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">
+                {submitting ? "Saving..." : "Save Warranty"}
+              </button>
+            </form>
+          </section>
 
-      <section className="vault-shell dashboard-shell">
-        <aside className="left-rail">
-          <h3>➤ FixVault</h3>
-          <button className="rail-link active">Dashboard</button>
-          <button className="rail-link">Add Product</button>
-          <button className="rail-link">My Warranties</button>
-          <button className="rail-link">Settings</button>
-        </aside>
-
-        <div className="dashboard-main">
-          <div className="dashboard-head">
-            <h2>Dashboard</h2>
-            <div className="dash-icons">⌕  ⚪  ☰</div>
-          </div>
-
-          <div className="stats-grid">
-            <article><b>152</b><span>Total Products</span></article>
-            <article><b>8</b><span>Expiring Soon</span></article>
-            <article><b>45</b><span>Active Warranties</span></article>
-          </div>
-
-          <div className="table-card">
-            <div className="table-head">
-              <h3>My Warranties</h3>
-              <div className="table-tools"><input placeholder="Search" /><button>Sort ▾</button></div>
+          <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg backdrop-blur">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Warranty Dashboard</h2>
+                <p className="text-sm text-slate-500">Track expiring products and repair options.</p>
+              </div>
+              <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product, brand, notes" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm sm:w-72" />
             </div>
 
-            <table>
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Purchase Date</th>
-                  <th>Warranty Status</th>
-                  <th>Expires In</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sampleRows.map((row) => (
-                  <tr key={row.product}>
-                    <td>{row.product}</td>
-                    <td>{row.purchase}</td>
-                    <td><span className={`status ${row.status.toLowerCase().replace(" ", "-")}`}>{row.status}</span></td>
-                    <td>{row.expires}</td>
-                  </tr>
+            <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700">Expiry reminders</h3>
+              {reminders.length === 0 ? (
+                <p className="mt-2 text-sm text-amber-700">No warranties expiring in the next 30 days.</p>
+              ) : (
+                <ul className="mt-2 list-disc pl-5 text-sm text-amber-800">
+                  {reminders.map((item) => (
+                    <li key={item.id}>{item.product_name} expires on {item.expiry_date}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {loading ? (
+              <p className="mt-6 text-sm text-slate-500">Loading warranties...</p>
+            ) : filtered.length === 0 ? (
+              <p className="mt-6 text-sm text-slate-500">No warranties added yet.</p>
+            ) : (
+              <div className="mt-6 grid gap-4">
+                {filtered.map((item) => (
+                  <ReportCard key={item.id} report={item} isOwner={false} onResolve={() => {}} />
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+              </div>
+            )}
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+};
 
-      <section className="vault-shell add-shell">
-        <aside className="left-rail">
-          <h3>➤ FixVault</h3>
-          <button className="rail-link active">Dashboard</button>
-          <button className="rail-link">Add Product</button>
-          <button className="rail-link">My Warranties</button>
-          <button className="rail-link">Settings</button>
-        </aside>
-
-        <div className="dashboard-main">
-          <h2>Add New Product</h2>
-          <form className="add-form">
-            <label>
-              Product Name
-              <input type="text" placeholder="Enter product" />
-            </label>
-            <label>
-              Brand
-              <select><option>Select brand</option></select>
-            </label>
-            <label>
-              Purchase Date
-              <input type="date" />
-            </label>
-            <label>
-              Warranty Period
-              <select><option>Select duration</option></select>
-            </label>
-            <label className="dropzone">
-              <span>Drag and drop or Browse</span>
-            </label>
-            <button type="button" className="btn primary save-btn">Save Product</button>
-          </form>
-        </div>
-      </section>
-    </main>
+export default function HomePage() {
+  return (
+    <ToastProvider>
+      <DashboardContent />
+    </ToastProvider>
   );
 }
