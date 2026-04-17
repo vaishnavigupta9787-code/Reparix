@@ -17,6 +17,15 @@ const jsonResponse = (data, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
+const getUserIdSafe = async () => {
+  try {
+    const result = await auth();
+    return result?.userId || null;
+  } catch {
+    return null;
+  }
+};
+
 const daysInMonth = (year, month) => {
   if (month === 2) {
     const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
@@ -59,7 +68,7 @@ export async function GET(request) {
   let builder = supabase.from("warranties").select("*").order("expiry_date", { ascending: true });
 
   if (mine === "true") {
-    const { userId } = await auth();
+    const userId = await getUserIdSafe();
     if (!userId) return jsonResponse({ error: "Unauthorized." }, 401);
     builder = builder.eq("user_id", userId);
   }
@@ -71,7 +80,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const { userId } = await auth();
+  const userId = await getUserIdSafe();
   if (!userId) return jsonResponse({ error: "Unauthorized." }, 401);
 
   const supabase = getClient();

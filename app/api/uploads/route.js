@@ -20,8 +20,17 @@ const jsonResponse = (data, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
+const getUserIdSafe = async () => {
+  try {
+    const result = await auth();
+    return result?.userId || null;
+  } catch {
+    return null;
+  }
+};
+
 export async function POST(request) {
-  const { userId } = await auth();
+  const userId = await getUserIdSafe();
   if (!userId) {
     return jsonResponse({ error: "Unauthorized." }, 401);
   }
@@ -38,13 +47,7 @@ export async function POST(request) {
     return jsonResponse({ error: "No file uploaded." }, 400);
   }
 
-  const allowedTypes = [
-    "application/pdf",
-    "image/png",
-    "image/jpeg",
-    "image/webp",
-    "image/jpg",
-  ];
+  const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/webp", "image/jpg"];
 
   if (!allowedTypes.includes(file.type)) {
     return jsonResponse({ error: "Only PDF or image files are allowed." }, 400);

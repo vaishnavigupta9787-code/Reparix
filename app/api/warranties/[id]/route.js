@@ -17,8 +17,17 @@ const jsonResponse = (data, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
+const getUserIdSafe = async () => {
+  try {
+    const result = await auth();
+    return result?.userId || null;
+  } catch {
+    return null;
+  }
+};
+
 export async function DELETE(_, { params }) {
-  const { userId } = await auth();
+  const userId = await getUserIdSafe();
   if (!userId) return jsonResponse({ error: "Unauthorized." }, 401);
 
   const supabase = getClient();
