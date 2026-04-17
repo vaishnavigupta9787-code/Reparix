@@ -1,8 +1,8 @@
 ﻿import { createClient } from "@supabase/supabase-js";
 import { auth } from "@clerk/nextjs/server";
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || "warranty-docs";
 
 const getClient = () => {
@@ -37,7 +37,7 @@ export async function POST(request) {
 
   const supabase = getClient();
   if (!supabase) {
-    return jsonResponse({ error: "Supabase server config missing." }, 500);
+    return jsonResponse({ error: "Supabase config missing. Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY." }, 500);
   }
 
   const formData = await request.formData();
@@ -72,3 +72,4 @@ export async function POST(request) {
   const { data } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filePath);
   return jsonResponse({ url: data.publicUrl, mimeType: file.type });
 }
+

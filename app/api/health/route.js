@@ -1,12 +1,15 @@
-const REQUIRED_ENV = [
-  "SUPABASE_URL",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-  "CLERK_SECRET_KEY",
-];
-
 export async function GET() {
-  const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
+  const hasSupabaseUrl = Boolean(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const hasSupabaseKey = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const hasClerkPub = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  const hasClerkSecret = Boolean(process.env.CLERK_SECRET_KEY);
+
+  const missing = [];
+  if (!hasSupabaseUrl) missing.push("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL");
+  if (!hasSupabaseKey) missing.push("SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (!hasClerkPub) missing.push("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
+  if (!hasClerkSecret) missing.push("CLERK_SECRET_KEY");
+
   const configured = missing.length === 0;
 
   return new Response(

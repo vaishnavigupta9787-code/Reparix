@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
-import type { NextMiddleware } from "next/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-const passthroughMiddleware: NextMiddleware = () => NextResponse.next();
-export default passthroughMiddleware;
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
