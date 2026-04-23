@@ -791,3 +791,103 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* Reparix color + photo refresh (no layout/logic changes) */
+.rp-app-bg {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(61, 95, 132, 0.18), transparent 45%),
+    linear-gradient(165deg, #f5f8fa 0%, #eef3f6 42%, #e9f0f4 100%);
+}
+
+.rp-nav-wrap {
+  background: rgba(22, 31, 40, 0.92);
+  border-bottom-color: rgba(83, 102, 120, 0.4);
+}
+
+.rp-brand {
+  color: #f3f7fb;
+}
+
+.rp-nav-link {
+  color: #cad8e7;
+}
+
+.rp-nav-link:hover {
+  color: #ffffff;
+}
+
+.rp-signup-btn {
+  background: linear-gradient(135deg, #1dbf73 0%, #34d399 100%);
+  box-shadow: 0 10px 20px rgba(29, 191, 115, 0.28);
+}
+
+.rp-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(87, 108, 128, 0.45);
+  background:
+    linear-gradient(120deg, rgba(18, 24, 31, 0.95) 0%, rgba(24, 33, 43, 0.92) 52%, rgba(20, 29, 40, 0.88) 100%),
+    url("https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=1600&q=80")
+      center/cover no-repeat;
+  box-shadow: 0 20px 42px rgba(15, 21, 28, 0.35);
+}
+
+.rp-hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(18, 24, 31, 0.93) 0%, rgba(18, 24, 31, 0.6) 55%, rgba(18, 24, 31, 0.28) 100%);
+  pointer-events: none;
+}
+
+.rp-hero-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.rp-eyebrow {
+  color: #34d399;
+}
+
+.rp-title,
+.rp-subtitle {
+  color: #f3f8ff;
+}
+
+.rp-subtitle {
+  opacity: 0.88;
+}
+
+.rp-stat-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(182, 197, 214, 0.28);
+  backdrop-filter: blur(8px);
+}
+
+.rp-stat-value {
+  color: #ffffff;
+}
+
+.rp-stat-label {
+  color: #d4deea;
+}
+
+.rp-card {
+  border-color: #dde7ee;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(66, 83, 99, 0.09);
+}
+
+.rp-btn-primary {
+  background: linear-gradient(135deg, #1f7a8c 0%, #2ea38d 100%);
+  box-shadow: 0 12px 24px rgba(32, 133, 124, 0.22);
+}
+
+.rp-btn-primary:hover {
+  box-shadow: 0 15px 28px rgba(32, 133, 124, 0.28);
+}
+
+.rp-reminder-box {
+  background: #fff6e8;
+  border-color: #f0d39a;
+}
