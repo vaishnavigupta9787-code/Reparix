@@ -48,7 +48,6 @@ const DashboardContent = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [file, setFile] = useState(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -101,19 +100,6 @@ const DashboardContent = () => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const handleFileChange = (event) => {
-    const selected = event.target.files?.[0];
-    if (!selected) {
-      setFile(null);
-      return;
-    }
-    if (selected.size > 10 * 1024 * 1024) {
-      addToast("Document must be under 10MB.", "error");
-      return;
-    }
-    setFile(selected);
-  };
-
   const validateForm = () => {
     if (!form.product_name || !form.purchase_date || !form.warranty_months) {
       return "Please fill product name, purchase date, and warranty months.";
@@ -123,16 +109,6 @@ const DashboardContent = () => {
       return "Warranty months must be between 1 and 120.";
     }
     return "";
-  };
-
-  const uploadBill = async () => {
-    if (!file) return "";
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/uploads", { method: "POST", body: formData });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "File upload failed.");
-    return data.url;
   };
 
   const handleSubmit = async (event) => {
@@ -147,11 +123,10 @@ const DashboardContent = () => {
 
     setSubmitting(true);
     try {
-      const invoiceUrl = await uploadBill();
       const res = await fetch("/api/warranties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, invoice_url: invoiceUrl }),
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -159,7 +134,6 @@ const DashboardContent = () => {
         return;
       }
       setForm((prev) => ({ ...prev, product_name: "", brand: "", notes: "", warranty_months: "12" }));
-      setFile(null);
       addToast("Warranty saved successfully.", "success");
       await loadWarranties();
     } catch (err) {
@@ -210,11 +184,6 @@ const DashboardContent = () => {
                   <label className="text-sm font-semibold text-slate-700">Warranty months</label>
                   <input type="number" min="1" max="120" value={form.warranty_months} onChange={handleChange("warranty_months")} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" required />
                 </div>
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-slate-700">Upload bill (PDF or image)</label>
-                <input type="file" accept="application/pdf,image/*" onChange={handleFileChange} className="mt-2 w-full text-sm text-slate-600" />
-                {file ? <p className="mt-2 text-xs text-slate-500">Selected: {file.name}</p> : null}
               </div>
               <div>
                 <label className="text-sm font-semibold text-slate-700">Notes</label>
