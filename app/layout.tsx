@@ -17,25 +17,33 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <ClerkProvider>
-          <header className="mx-auto flex max-w-6xl items-center justify-between px-6 pt-6">
-            <Link href="/" className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
-              Reparix
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/my-reports" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
-                My Warranties
+          <header className="rp-nav-wrap">
+            <div className="rp-nav">
+              <Link href="/" className="rp-brand">
+                Reparix
               </Link>
-              <Show when="signed-out">
-                <SignInButton />
-                <SignUpButton>
-                  <button className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-              </Show>
-              <Show when="signed-in">
-                <UserButton />
-              </Show>
+              <div className="rp-nav-links">
+                <Link href="/" className="rp-nav-link">
+                  Dashboard
+                </Link>
+                <Link href="/my-reports" className="rp-nav-link">
+                  My Warranties
+                </Link>
+              </div>
+              <div className="rp-auth">
+                <Link href="/my-reports" className="rp-nav-link mobile-only">
+                My Warranties
+                </Link>
+                <Show when="signed-out">
+                  <SignInButton />
+                  <SignUpButton>
+                    <button className="rp-signup-btn">Sign Up</button>
+                  </SignUpButton>
+                </Show>
+                <Show when="signed-in">
+                  <UserButton />
+                </Show>
+              </div>
             </div>
           </header>
           {children}

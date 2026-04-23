@@ -144,16 +144,16 @@ const DashboardContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      <div className="page">
-        <header className="rounded-3xl border border-white/50 bg-white/70 p-8 shadow-lg backdrop-blur">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-600">Warranty Manager</p>
-              <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">Reparix</h1>
-              <p className="mt-3 max-w-xl text-sm text-slate-600 md:text-base">Never lose your warranty again. Store documents, track expiry, and find repair options.</p>
+    <div className="rp-app-bg">
+      <div className="rp-shell">
+        <header className="rp-hero-card">
+          <div className="rp-hero-grid">
+            <div className="rp-hero-copy">
+              <p className="rp-eyebrow">Warranty Manager</p>
+              <h1 className="rp-title">Reparix</h1>
+              <p className="rp-subtitle">Never lose your warranty again. Store documents, track expiry, and find repair options.</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rp-stats-grid">
               <StatCard label="Total Products" value={stats.total} />
               <StatCard label="Active" value={stats.active} />
               <StatCard label="Expired" value={stats.expired} />
@@ -162,55 +162,55 @@ const DashboardContent = () => {
           </div>
         </header>
 
-        <main className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_1.4fr]">
-          <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg backdrop-blur">
-            <h2 className="text-xl font-semibold text-slate-900">Add Warranty</h2>
-            <p className="mt-1 text-sm text-slate-500">Set Clerk env keys to enable account-based saving/deleting in production.</p>
-            <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+        <main className="rp-main-grid">
+          <section className="rp-card rp-form-card">
+            <h2 className="rp-section-title">Add Warranty</h2>
+            <p className="rp-section-text">Set Clerk env keys to enable account-based saving/deleting in production.</p>
+            <form className="rp-form" onSubmit={handleSubmit}>
               <div>
-                <label className="text-sm font-semibold text-slate-700">Product name</label>
-                <input type="text" value={form.product_name} onChange={handleChange("product_name")} placeholder="iPhone 14" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" required />
+                <label className="rp-label">Product name</label>
+                <input type="text" value={form.product_name} onChange={handleChange("product_name")} placeholder="iPhone 14" className="rp-input" required />
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-700">Brand</label>
-                <input type="text" value={form.brand} onChange={handleChange("brand")} placeholder="Apple" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+                <label className="rp-label">Brand</label>
+                <input type="text" value={form.brand} onChange={handleChange("brand")} placeholder="Apple" className="rp-input" />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rp-grid-2">
                 <div>
-                  <label className="text-sm font-semibold text-slate-700">Purchase date</label>
-                  <input type="date" value={form.purchase_date} onChange={handleChange("purchase_date")} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" required />
+                  <label className="rp-label">Purchase date</label>
+                  <input type="date" value={form.purchase_date} onChange={handleChange("purchase_date")} className="rp-input" required />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-700">Warranty months</label>
-                  <input type="number" min="1" max="120" value={form.warranty_months} onChange={handleChange("warranty_months")} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" required />
+                  <label className="rp-label">Warranty months</label>
+                  <input type="number" min="1" max="120" value={form.warranty_months} onChange={handleChange("warranty_months")} className="rp-input" required />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-700">Notes</label>
-                <textarea value={form.notes} onChange={handleChange("notes")} placeholder="Any extra details" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm" />
+                <label className="rp-label">Notes</label>
+                <textarea value={form.notes} onChange={handleChange("notes")} placeholder="Any extra details" className="rp-input rp-textarea" />
               </div>
-              {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-              <button type="submit" disabled={submitting} className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">
+              {error ? <p className="rp-error">{error}</p> : null}
+              <button type="submit" disabled={submitting} className="rp-btn-primary">
                 {submitting ? "Saving..." : "Save Warranty"}
               </button>
             </form>
           </section>
 
-          <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg backdrop-blur">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="rp-card rp-dashboard-card">
+            <div className="rp-dashboard-head">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Warranty Dashboard</h2>
-                <p className="text-sm text-slate-500">Track expiring products and repair options.</p>
+                <h2 className="rp-section-title">Warranty Dashboard</h2>
+                <p className="rp-section-text">Track expiring products and repair options.</p>
               </div>
-              <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product, brand, notes" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm sm:w-72" />
+              <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product, brand, notes" className="rp-search" />
             </div>
 
-            <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700">Expiry reminders</h3>
+            <div className="rp-reminder-box">
+              <h3 className="rp-reminder-title">Expiry reminders</h3>
               {reminders.length === 0 ? (
-                <p className="mt-2 text-sm text-amber-700">No warranties expiring in the next 30 days.</p>
+                <p className="rp-reminder-text">No warranties expiring in the next 30 days.</p>
               ) : (
-                <ul className="mt-2 list-disc pl-5 text-sm text-amber-800">
+                <ul className="rp-reminder-list">
                   {reminders.map((item) => (
                     <li key={item.id}>{item.product_name} expires on {item.expiry_date}</li>
                   ))}
@@ -219,11 +219,11 @@ const DashboardContent = () => {
             </div>
 
             {loading ? (
-              <p className="mt-6 text-sm text-slate-500">Loading warranties...</p>
+              <p className="rp-empty-text">Loading warranties...</p>
             ) : filtered.length === 0 ? (
-              <p className="mt-6 text-sm text-slate-500">No warranties added yet.</p>
+              <p className="rp-empty-text">No warranties added yet.</p>
             ) : (
-              <div className="mt-6 grid gap-4">
+              <div className="rp-report-list">
                 {filtered.map((item) => (
                   <ReportCard key={item.id} report={item} isOwner={false} onResolve={() => {}} />
                 ))}
