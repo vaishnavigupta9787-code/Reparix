@@ -80,7 +80,19 @@ export async function GET(request) {
   }
 
   const { data, error } = await builder;
-  if (error) return jsonResponse({ error: error.message }, 500);
+  if (error) {
+    const message = String(error.message || "");
+    const missingTable =
+      message.includes("Could not find the table") ||
+      message.includes("schema cache") ||
+      message.includes("relation \"public.warranties\" does not exist");
+
+    if (missingTable) {
+      return jsonResponse({ warranties: [], warning: "warranties_table_missing" }, 200);
+    }
+
+    return jsonResponse({ error: message }, 500);
+  }
 
   return jsonResponse({ warranties: data || [] });
 }
